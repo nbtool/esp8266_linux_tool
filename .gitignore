@@ -1,0 +1,4 @@
+app/*/build/
+sdk
+tool/xtensa-lx106-elf/
+sdkconfig.old
