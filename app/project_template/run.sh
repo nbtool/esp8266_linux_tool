@@ -6,12 +6,16 @@ PROJECT_ROOT=../..
 TOOLS_PATH=$PROJECT_ROOT/tool
 SDK_PATH=$PROJECT_ROOT/sdk
 APP_PATH=$PROJECT_ROOT/app
+
 XTENSA_LX106_ELF_PATH=$TOOLS_PATH/xtensa-lx106-elf
 ESP_IDF_PATH=$SDK_PATH/ESP8266_RTOS_SDK
+
 the_sdk_path=`cd $ESP_IDF_PATH; pwd`
 the_tool_chain_path=`cd $XTENSA_LX106_ELF_PATH/bin; pwd`
+
 export PATH="$PATH:$the_tool_chain_path"
 export IDF_PATH="$the_sdk_path"
+
 if [ "$1" == "config" ]; then
     make menuconfig
 elif [ "$1" == "build" ]; then
