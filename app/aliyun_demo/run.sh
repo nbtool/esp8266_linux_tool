@@ -17,40 +17,29 @@ the_tool_chain_path=`cd $XTENSA_LX106_ELF_PATH/bin; pwd`
 export PATH="$PATH:$the_tool_chain_path"
 export IDF_PATH="$the_sdk_path"
 
-GIT_ESP_ALIYUN_LINK=git@github.com:oldprogram/esp-aliyun.git
-GIT_IOTKIT_EMBEDDED_LINK=git@github.com:oldprogram/iotkit-embedded.git
-#GIT_ESP_ALIYUN_LINK=https://github.com/espressif/esp-aliyun.git
-#GIT_IOTKIT_EMBEDDED_LINK=https://github.com/aliyun/iotkit-embedded.git
+#GIT_ESP_ALIYUN_LINK=git@github.com:oldprogram/esp-aliyun.git
+GIT_ESP_ALIYUN_LINK=https://github.com/espressif/esp-aliyun.git
 
 #--------------------------------------------------------------------------
 function install_project_from_github(){
     echo "> install project form github ..."
     if [ ! -d "./esp-aliyun/" ]; then
-        git clone $GIT_ESP_ALIYUN_LINK
+        git clone --recursive $GIT_ESP_ALIYUN_LINK
         
-        # remove the iotkit-git link
-        # make a link iotkit-embedded->../iotkit-embedded to ./esp-aliyun/iotkit-embedded
-        rm -rf ./esp-aliyun/iotkit-embedded/
-        ln -s ../iotkit-embedded ./esp-aliyun/iotkit-embedded
-
         # remove the mqtt_example.c
         # move cp mqtt_example.c replace pre-one
         rm -rf ./esp-aliyun/examples/mqtt_example/main/mqtt_example.c
         cp ./my_src/mqtt_example.c ./esp-aliyun/examples/mqtt_example/main/
     fi
-
-    if [ ! -d "./iotkit-embedded/" ]; then
-        git clone $GIT_IOTKIT_EMBEDDED_LINK
-
-        # cp config.esp32.aos to ./iotkit-embedded/src/board/
-        cp ./my_src/config.esp32.aos ./iotkit-embedded/src/board/
-    fi
+    
+    cd $ESP8266_RTOS_SDK
+    git checkout release/v3.1
 }
 
 function sdk_op(){
     echo ">> APP_OP   "$1
 
-    cd ./iotkit-embedded/
+    cd ./esp-aliyun/iotkit-emt bedded/
     if [ "$1" == "reconfig" ]; then
         make reconfig
     elif [ "$1" == "config" ]; then

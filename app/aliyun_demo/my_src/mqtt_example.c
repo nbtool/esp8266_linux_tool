@@ -12,12 +12,13 @@
 #include "app_entry.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "cJSON.h"
 
 // #define PRODUCT_KEY                  NULL
-#define PRODUCT_KEY                     "a1wAofCFef3"
-#define PRODUCT_SECRET                  "6aU67eL2iHo7xv9x"
-#define DEVICE_NAME                     "test"
-#define DEVICE_SECRET                   "ktktdxJm34qtZ9pLWk6kzeQDKk09xPEv"
+#define PRODUCT_KEY                     "a1QynQ2BCLJ"
+#define PRODUCT_SECRET                  "GGhRmKHLS632t8WX"
+#define DEVICE_NAME                     "device1"
+#define DEVICE_SECRET                   "TbJkO9e2cMusqkDzXdasoVVJe7OdgjXx"
       
 /* These are pre-defined topics */
 #define TOPIC_UPDATE                    "/"PRODUCT_KEY"/"DEVICE_NAME"/user/update"
@@ -42,6 +43,67 @@ static int      user_argc;
 static char   **user_argv;
 
 static const char *TAG = "MQTT";
+
+static char update_flag = 1;
+typedef struct{
+    bool PowerSwitch;
+    bool OilShortage;
+    char SprayLevel;
+    char timer[41];
+    char time_syn[21];
+}dps_s;
+
+dps_s dps = {
+    .PowerSwitch = 0,
+    .OilShortage = 0,
+    .SprayLevel = 0,
+    .timer = "0123456789012345678901234567890123456789",
+    .time_syn = "1512038504",
+};
+
+
+char get_value(const char *jsonRoot){
+    // jsonRoot 是您要剖析的数据
+    //首先整体判断是否为一个json格式的数据
+	cJSON *pJsonRoot = cJSON_Parse(jsonRoot);
+	//如果是否json格式数据
+	if (pJsonRoot !=NULL) {
+        cJSON *pParams = cJSON_GetObjectItem(pJsonRoot, "params");
+        if(pParams != NULL){
+            cJSON *pValue =  cJSON_GetObjectItem(pParams, "PowerSwitch");
+            if(pValue != NULL){
+                EXAMPLE_TRACE("dp: PowerSwitch:%d",pValue->valueint);
+                dps.PowerSwitch = pValue->valueint;
+            }
+            pValue =  cJSON_GetObjectItem(pParams, "OilShortage");
+            if(pValue != NULL){
+                EXAMPLE_TRACE("dp: OilShortage:%d",pValue->valueint);
+                dps.OilShortage = pValue->valueint;
+            }
+            pValue =  cJSON_GetObjectItem(pParams, "SprayLevel");
+            if(pValue != NULL){
+                EXAMPLE_TRACE("dp: SprayLevel:%d",pValue->valueint);
+                dps.SprayLevel = pValue->valueint;
+            }
+            pValue =  cJSON_GetObjectItem(pParams, "timer");
+            if(pValue != NULL){
+                EXAMPLE_TRACE("dp: timer:%s",pValue->valuestring);
+                memset(dps.timer,0,sizeof(dps.timer));
+                memcpy(dps.timer,pValue->valuestring,strlen(pValue->valuestring)); 
+            }
+            pValue =  cJSON_GetObjectItem(pParams, "time_syn");
+            if(pValue != NULL){
+                EXAMPLE_TRACE("dp: time_syn:%s",pValue->valuestring);
+                memset(dps.time_syn,0,sizeof(dps.time_syn));
+                memcpy(dps.time_syn,pValue->valuestring,strlen(pValue->valuestring));
+            }
+            update_flag = 1;
+        }
+    }    
+
+    return 1;
+}
+
 
 void event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
@@ -131,6 +193,7 @@ static void _demo_message_arrive(void *pcontext, void *pclient, iotx_mqtt_event_
                           ptopic_info->payload_len,
                           ptopic_info->payload,
                           ptopic_info->payload_len);
+            get_value(ptopic_info->payload);
             EXAMPLE_TRACE("----");
             break;
         default:
@@ -146,7 +209,7 @@ int mqtt_client(void)
     iotx_conn_info_pt pconn_info;
     iotx_mqtt_param_t mqtt_params;
     iotx_mqtt_topic_info_t topic_msg;
-    char msg_pub[128];
+    char msg_pub[256];
 
     /* Device AUTH */
     if (0 != IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info)) {
@@ -235,7 +298,7 @@ int mqtt_client(void)
     HAL_SleepMs(2000);
 
     /* Initialize topic information */
-    memset(msg_pub, 0x0, 128);
+    memset(msg_pub, 0x0, 256);
     strcpy(msg_pub, "data: hello! start!");
     memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));
     topic_msg.qos = IOTX_MQTT_QOS1;
@@ -251,32 +314,38 @@ int mqtt_client(void)
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //then send a top
+
     do {
         /* Generate topic message */
         cnt++;
-        msg_len = snprintf(msg_pub, sizeof(msg_pub), "{\"method\":\"thing.event.property.post\",\"id\":\"7\",\"version\":\"1.0\",\"params\":{\"Status\":%d,\"Data\":\"Hello, World!-%d\"}}",cnt%2 == 0,cnt);
-      
-        if (msg_len < 0) {
-            EXAMPLE_TRACE("Error occur! Exit program");
-            return -1;
-        }
+        if(update_flag){
+            update_flag = 0;
+            msg_len = snprintf(msg_pub, sizeof(msg_pub), 
+                "{\"method\":\"thing.event.property.post\",\"id\":\"7\",\"version\":\"1.0\",\"params\":{\"PowerSwitch\":%d,\"OilShortage\":%d,\"SprayLevel\":%d,\"timer\":\"%s\",\"time_syn\":\"%s\"}}",
+                dps.PowerSwitch, dps.OilShortage, dps.SprayLevel, dps.timer, dps.time_syn);
 
-        topic_msg.payload = (void *)msg_pub;
-        topic_msg.payload_len = msg_len;
+            if (msg_len < 0) {
+                EXAMPLE_TRACE("Error occur! Exit program");
+                return -1;
+            }
 
-        rc = IOT_MQTT_Publish(pclient, DEVICE_PROPERTY_POST, &topic_msg);
-        if (rc < 0) {
-            EXAMPLE_TRACE("error occur when publish");
+            topic_msg.payload = (void *)msg_pub;
+            topic_msg.payload_len = msg_len;
+
+            rc = IOT_MQTT_Publish(pclient, DEVICE_PROPERTY_POST, &topic_msg);
+            if (rc < 0) {
+                EXAMPLE_TRACE("error occur when publish");
+            }
+            EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
         }
-        EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
 
         /* handle the MQTT packet received from TCP or SSL connection */
         IOT_MQTT_Yield(pclient, 1000);
 
         /* infinite loop if running with 'loop' argument */
         if (user_argc >= 2 && !strcmp("loop", user_argv[1])) {
-            // HAL_SleepMs(2000);
-            // cnt = 0;
+            //HAL_SleepMs(2000);
+            //cnt = 0;
         }
         ESP_LOGI(TAG, "min:%u heap:%u", esp_get_minimum_free_heap_size(), esp_get_free_heap_size());
     } while (cnt);
