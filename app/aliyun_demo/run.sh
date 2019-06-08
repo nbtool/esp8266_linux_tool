@@ -28,18 +28,18 @@ function install_project_from_github(){
         
         # remove the mqtt_example.c
         # move cp mqtt_example.c replace pre-one
-        rm -rf ./esp-aliyun/examples/mqtt_example/main/mqtt_example.c
-        cp ./my_src/mqtt_example.c ./esp-aliyun/examples/mqtt_example/main/
+        rm -rf ./esp-aliyun/examples/mqtt/mqtt_example/main/mqtt_example.c 
+        cp ./my_src/mqtt_example.c ./esp-aliyun/examples/mqtt/mqtt_example/main/ 
     fi
     
-    cd $ESP8266_RTOS_SDK
+    cd $ESP_IDF_PATH
     git checkout release/v3.1
 }
 
 function sdk_op(){
     echo ">> APP_OP   "$1
 
-    cd ./esp-aliyun/iotkit-emt bedded/
+    cd ./esp-aliyun/iotkit-embedded/
     if [ "$1" == "reconfig" ]; then
         make reconfig
     elif [ "$1" == "config" ]; then
@@ -57,7 +57,7 @@ function sdk_op(){
 function app_op(){
     echo ">> SDK_OP   "$1
 
-    cd  ./esp-aliyun/examples/mqtt_example/
+    cd ./esp-aliyun/examples/mqtt/mqtt_example/
     if [ "$1" == "defconfig" ]; then
         make defconfig
     elif [ "$1" == "config" ]; then
