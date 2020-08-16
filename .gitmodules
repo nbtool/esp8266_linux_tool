@@ -1,0 +1,3 @@
+[submodule "app/aliyun_demo/esp-aliyun"]
+	path = app/aliyun_demo/esp-aliyun
+	url = https://github.com/beautifulzzzz/esp-aliyun
