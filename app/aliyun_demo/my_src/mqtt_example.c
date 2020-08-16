@@ -14,11 +14,19 @@
 #include "esp_log.h"
 #include "cJSON.h"
 
+#if 0
+// #define PRODUCT_KEY                  NULL
+#define PRODUCT_KEY                     "a10zictDXlp"
+#define PRODUCT_SECRET                  "8yDKzx1K6KC6RnMh"
+#define DEVICE_NAME                     "device_618"
+#define DEVICE_SECRET                   "SQQ0YjXG7FPRJSDRWN4qscWGSauOIvLx"
+#else
 // #define PRODUCT_KEY                  NULL
 #define PRODUCT_KEY                     "a1QynQ2BCLJ"
 #define PRODUCT_SECRET                  "GGhRmKHLS632t8WX"
 #define DEVICE_NAME                     "device1"
 #define DEVICE_SECRET                   "TbJkO9e2cMusqkDzXdasoVVJe7OdgjXx"
+#endif
       
 /* These are pre-defined topics */
 #define TOPIC_UPDATE                    "/"PRODUCT_KEY"/"DEVICE_NAME"/user/update"
@@ -61,41 +69,58 @@ dps_s dps = {
     .time_syn = "1512038504",
 };
 
-
+extern void uart_send_data(char *para, int len);
 char get_value(const char *jsonRoot){
     // jsonRoot 是您要剖析的数据
     //首先整体判断是否为一个json格式的数据
 	cJSON *pJsonRoot = cJSON_Parse(jsonRoot);
 	//如果是否json格式数据
 	if (pJsonRoot !=NULL) {
+        char send_data[40];
+        int send_data_len;
         cJSON *pParams = cJSON_GetObjectItem(pJsonRoot, "params");
         if(pParams != NULL){
+
             cJSON *pValue =  cJSON_GetObjectItem(pParams, "PowerSwitch");
             if(pValue != NULL){
                 EXAMPLE_TRACE("dp: PowerSwitch:%d",pValue->valueint);
-                dps.PowerSwitch = pValue->valueint;
+                dps.PowerSwitch = pValue->valueint;      
+
+                send_data_len = sprintf(send_data,"PowerSwitch:%d",dps.PowerSwitch);
+                uart_send_data(send_data,send_data_len);
             }
+
             pValue =  cJSON_GetObjectItem(pParams, "OilShortage");
             if(pValue != NULL){
                 EXAMPLE_TRACE("dp: OilShortage:%d",pValue->valueint);
                 dps.OilShortage = pValue->valueint;
             }
+
             pValue =  cJSON_GetObjectItem(pParams, "SprayLevel");
             if(pValue != NULL){
                 EXAMPLE_TRACE("dp: SprayLevel:%d",pValue->valueint);
                 dps.SprayLevel = pValue->valueint;
+
+                send_data_len = sprintf(send_data,"SprayLevel:%d",dps.SprayLevel);
+                uart_send_data(send_data,send_data_len);
             }
+
             pValue =  cJSON_GetObjectItem(pParams, "timer");
             if(pValue != NULL){
                 EXAMPLE_TRACE("dp: timer:%s",pValue->valuestring);
-                memset(dps.timer,0,sizeof(dps.timer));
-                memcpy(dps.timer,pValue->valuestring,strlen(pValue->valuestring)); 
+                memcpy(dps.timer,pValue->valuestring,strlen(pValue->valuestring)+1); 
+
+                send_data_len = sprintf(send_data,"timer:%s",dps.timer);
+                uart_send_data(send_data,send_data_len);
             }
+
             pValue =  cJSON_GetObjectItem(pParams, "time_syn");
             if(pValue != NULL){
                 EXAMPLE_TRACE("dp: time_syn:%s",pValue->valuestring);
-                memset(dps.time_syn,0,sizeof(dps.time_syn));
-                memcpy(dps.time_syn,pValue->valuestring,strlen(pValue->valuestring));
+                memcpy(dps.time_syn,pValue->valuestring,strlen(pValue->valuestring)+1);
+                
+                send_data_len = sprintf(send_data,"time_syn:%s",dps.time_syn);
+                uart_send_data(send_data,send_data_len);
             }
             update_flag = 1;
         }

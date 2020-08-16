@@ -67,11 +67,24 @@ void app_show_num(int num){
     if(show_pos == 3)show_pos = 0;
 }
 
+char app_read_key(void){
+    char data = 0;
+    for(int i=0;i<8;i++){
+        gpio_set_level(GPIO_SCK, 0);
+        gpio_set_level(GPIO_SCK, 1);
+        char bit = gpio_get_level(GPIO_MISO) == 0?0:1;
+        data <<= 1;
+        data |= bit;
+    }
+    return data;
+}
+
 int show_num = 0;
 static void gpio_task_example(void *arg)
 {
     while (1) {
         app_show_num(show_num);
+        ESP_LOGI(TAG, "key: %X\n", app_read_key());
         vTaskDelay(9 / portTICK_RATE_MS);
     }
 }

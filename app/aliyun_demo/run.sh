@@ -67,6 +67,7 @@ function app_op(){
     elif [ "$1" == "erase" ]; then
         make erase
     elif [ "$1" == "flash" ]; then
+        make print_flash_cmd
         make flash
     elif [ "$1" == "monitor" ]; then
         make monitor
