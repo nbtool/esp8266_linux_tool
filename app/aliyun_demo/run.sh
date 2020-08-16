@@ -18,19 +18,19 @@ export PATH="$PATH:$the_tool_chain_path"
 export IDF_PATH="$the_sdk_path"
 
 #GIT_ESP_ALIYUN_LINK=git@github.com:oldprogram/esp-aliyun.git
-GIT_ESP_ALIYUN_LINK=https://github.com/espressif/esp-aliyun.git
+#GIT_ESP_ALIYUN_LINK=https://github.com/beautifulzzzz/esp-aliyun.git
 
 #--------------------------------------------------------------------------
 function install_project_from_github(){
     echo "> install project form github ..."
-    if [ ! -d "./esp-aliyun/" ]; then
-        git clone --recursive $GIT_ESP_ALIYUN_LINK
+    #if [ ! -d "./esp-aliyun/" ]; then
+        #git clone --recursive $GIT_ESP_ALIYUN_LINK
         
         # remove the mqtt_example.c
         # move cp mqtt_example.c replace pre-one
-        rm -rf ./esp-aliyun/examples/mqtt/mqtt_example/main/mqtt_example.c 
-        cp ./my_src/mqtt_example.c ./esp-aliyun/examples/mqtt/mqtt_example/main/ 
-    fi
+        #rm -rf ./esp-aliyun/examples/mqtt/mqtt_example/main/mqtt_example.c 
+        #cp ./my_src/mqtt_example.c ./esp-aliyun/examples/mqtt/mqtt_example/main/ 
+    #fi
     
     cd $ESP_IDF_PATH
     git checkout release/v3.1
