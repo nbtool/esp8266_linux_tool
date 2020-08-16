@@ -1,3 +1,6 @@
 [submodule "app/aliyun_demo/esp-aliyun"]
 	path = app/aliyun_demo/esp-aliyun
 	url = https://github.com/beautifulzzzz/esp-aliyun
+[submodule "app/qcloud-iot-esp-wifi"]
+	path = app/qcloud-iot-esp-wifi
+	url = git@github.com:beautifulzzzz/qcloud-iot-esp-wifi.git
