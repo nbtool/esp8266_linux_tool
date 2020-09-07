@@ -25,10 +25,10 @@
 #include "driver/pwm.h"
 
 
-#define PWM_1_OUT_IO_NUM   13
+#define PWM_1_OUT_IO_NUM    14
 
 // PWM period 10us(100Khz), same as depth
-#define PWM_PERIOD    (10)
+#define PWM_PERIOD    (20000)
 
 static const char *TAG = "pwm_example";
 
@@ -39,7 +39,7 @@ const uint32_t pin_num[1] = {
 
 // dutys table, (duty/PERIOD)*depth
 uint32_t duties[1] = {
-    6
+    18700
 };
 
 // phase table, (phase/180)*depth
@@ -54,7 +54,14 @@ void app_main()
     pwm_set_phases(phase);
     pwm_start();
 
+    int t = 0;
     while (1) {
+        if(t%3 == 0){
+            duties[0] = duties[0] == 18000 ? 18700:18000;
+            pwm_set_duty(0,duties[0]);
+            pwm_start();
+        }
+        t++;
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }
